@@ -2148,6 +2148,221 @@ async function runEdgeInference(days, userContext = {}) {
   }
 }
 
+// ── QUIZ DATA ────────────────────────────────────────────────────────────────
+
+const ISI_QUESTIONS = [
+  { q: "Difficulty falling asleep", opts: ["None","Mild","Moderate","Severe","Very Severe"] },
+  { q: "Difficulty staying asleep", opts: ["None","Mild","Moderate","Severe","Very Severe"] },
+  { q: "Problems waking up too early", opts: ["None","Mild","Moderate","Severe","Very Severe"] },
+  { q: "How satisfied/dissatisfied are you with your current sleep pattern?", opts: ["Very Satisfied","Satisfied","Neutral","Dissatisfied","Very Dissatisfied"] },
+  { q: "How noticeable to others do you think your sleep problem is in terms of impairing the quality of your life?", opts: ["Not at all Noticeable","A little","Somewhat","Much","Very Much Noticeable"] },
+  { q: "How worried/distressed are you about your current sleep problem?", opts: ["Not at all Worried","A little","Somewhat","Much","Very Much Worried"] },
+  { q: "To what extent do you consider your sleep problem to interfere with your daily functioning (e.g. daytime fatigue, mood, ability to function at work/daily chores, concentration, memory, mood, etc.)?", opts: ["Not at all Interfering","A little","Somewhat","Much","Very Much Interfering"] },
+];
+
+const PHQ9_QUESTIONS = [
+  "Little interest or pleasure in doing things",
+  "Feeling down, depressed, or hopeless",
+  "Trouble falling or staying asleep, or sleeping too much",
+  "Feeling tired or having little energy",
+  "Poor appetite or overeating",
+  "Feeling bad about yourself — or that you are a failure or have let yourself or your family down",
+  "Trouble concentrating on things, such as reading the newspaper or watching television",
+  "Moving or speaking so slowly that other people could have noticed? Or the opposite — being so fidgety or restless that you have been moving around a lot more than usual",
+  "Thoughts that you would be better off dead, or of hurting yourself in some way",
+];
+const PHQ9_OPTS = ["Not at all","Several days","More than half the days","Nearly every day"];
+
+const GAD7_QUESTIONS = [
+  "Feeling nervous, anxious, or on edge",
+  "Not being able to stop or control worrying",
+  "Worrying too much about different things",
+  "Trouble relaxing",
+  "Being so restless that it is hard to sit still",
+  "Becoming easily annoyed or irritable",
+  "Feeling afraid, as if something awful might happen",
+];
+const GAD7_OPTS = ["Not at all","Several days","More than half the days","Nearly every day"];
+
+const MEQ_QUESTIONS = [
+  {
+    q: "Approximately what time would you get up if you were entirely free to plan your day?",
+    opts: ["5:00 AM – 6:30 AM","6:30 AM – 7:45 AM","7:45 AM – 9:45 AM","9:45 AM – 11:00 AM","11:00 AM – 12:00 PM"],
+    scores: [5, 4, 3, 2, 1]
+  },
+  {
+    q: "Approximately what time would you go to bed if you were entirely free to plan your evening?",
+    opts: ["8:00 PM – 9:00 PM","9:00 PM – 10:15 PM","10:15 PM – 12:30 AM","12:30 AM – 1:45 AM","1:45 AM – 3:00 AM"],
+    scores: [5, 4, 3, 2, 1]
+  },
+  {
+    q: "If you usually have to get up at a specific time in the morning, how much do you depend on being woken by an alarm?",
+    opts: ["Not at all dependent","Slightly dependent","Fairly dependent","Very dependent"],
+    scores: [4, 3, 2, 1]
+  },
+  {
+    q: "How easy do you find it to get up in the morning (when you are not woken up unexpectedly)?",
+    opts: ["Not at all easy","Not very easy","Fairly easy","Very easy"],
+    scores: [1, 2, 3, 4]
+  },
+  {
+    q: "How alert do you feel during the first half hour after you wake up in the morning?",
+    opts: ["Not at all alert","Slightly alert","Fairly alert","Very alert"],
+    scores: [1, 2, 3, 4]
+  },
+  {
+    q: "How is your appetite during the first half hour after you wake up in the morning?",
+    opts: ["Very poor","Fairly poor","Fairly good","Very good"],
+    scores: [1, 2, 3, 4]
+  },
+  {
+    q: "During the first half hour after you wake up in the morning, how tired do you feel?",
+    opts: ["Very tired","Fairly tired","Fairly refreshed","Very refreshed"],
+    scores: [1, 2, 3, 4]
+  },
+  {
+    q: "When you have no commitments the next day, what time do you go to bed compared to your usual bedtime?",
+    opts: ["Seldom or never later","Less than 1 hour later","1–2 hours later","More than 2 hours later"],
+    scores: [4, 3, 2, 1]
+  },
+  {
+    q: "Suppose you have decided to engage in some physical exercise. A friend suggests 7:00–8:00 AM twice a week. How do you think you would perform?",
+    opts: ["Would be in good form","Would be in reasonable form","Would find it difficult","Would find it very difficult"],
+    scores: [4, 3, 2, 1]
+  },
+  {
+    q: "At what time in the evening do you feel tired and, as a result, in need of sleep?",
+    opts: ["8:00 PM – 9:00 PM","9:00 PM – 10:15 PM","10:15 PM – 12:45 AM","12:45 AM – 2:00 AM","2:00 AM – 3:00 AM"],
+    scores: [5, 4, 3, 2, 1]
+  },
+  {
+    q: "Suppose you want to be at your peak performance for a test which you know is going to be mentally exhausting and lasting for 2 hours. You are entirely free to plan your day. Considering only your own internal clock, which ONE of the four testing times would you choose?",
+    opts: ["8:00 AM – 10:00 AM","11:00 AM – 1:00 PM","3:00 PM – 5:00 PM","7:00 PM – 9:00 PM"],
+    scores: [6, 4, 2, 0]
+  },
+  {
+    q: "If you went to bed at 11:00 PM, at what level of tiredness would you be?",
+    opts: ["Not at all tired","A little tired","Fairly tired","Very tired"],
+    scores: [0, 2, 3, 5]
+  },
+  {
+    q: "For some reason you have gone to bed several hours later than usual, but there is no need to get up at any particular time the next morning. Which ONE of the following events are you most likely to experience?",
+    opts: ["Will wake up at the usual time and will NOT fall back asleep","Will wake up at the usual time and will doze thereafter","Will wake up at the usual time but will fall back asleep","Will NOT wake up until later than usual"],
+    scores: [4, 3, 2, 1]
+  },
+  {
+    q: "Suppose that you have to stay awake between 4:00 AM and 6:00 AM in order to carry out a night watch. You have no commitments the next day. Which ONE of the following alternatives would suit you best?",
+    opts: ["Would NOT go to bed until watch was over","Would take a nap before and sleep after","Would take a good sleep before and nap after","Would sleep only before watch"],
+    scores: [1, 2, 3, 4]
+  },
+  {
+    q: "Suppose that you have to do 2 hours of hard physical work. You are entirely free to plan your day. Considering only your own internal clock, which ONE of the following times would you choose?",
+    opts: ["8:00 AM – 10:00 AM","11:00 AM – 1:00 PM","3:00 PM – 5:00 PM","7:00 PM – 9:00 PM"],
+    scores: [4, 3, 2, 1]
+  },
+  {
+    q: "Suppose that you have decided to engage in hard physical exercise. A friend suggests twice a week, 10:00–11:00 PM. How well do you think you would perform?",
+    opts: ["Would be in good form","Would be in reasonable form","Would find it difficult","Would find it very difficult"],
+    scores: [1, 2, 3, 4]
+  },
+  {
+    q: "Suppose that you can choose your own work hours. Assume that you worked a FIVE-hour day and that your job was interesting and you were paid based on performance. Which FIVE CONSECUTIVE HOURS would you select?",
+    opts: ["Midnight – 5:00 AM","3:00 AM – 8:00 AM","9:00 AM – 2:00 PM","2:00 PM – 7:00 PM","5:00 PM – 10:00 PM"],
+    scores: [1, 2, 4, 3, 1]
+  },
+  {
+    q: "At what time of the day do you think that you reach your 'feeling best' peak?",
+    opts: ["Midnight – 5:00 AM","5:00 AM – 9:00 AM","9:00 AM – 11:00 AM","11:00 AM – 5:00 PM","5:00 PM – 10:00 PM"],
+    scores: [1, 2, 5, 4, 3]
+  },
+  {
+    q: "One hears about 'morning' and 'evening' types of people. Which ONE of these types do you consider yourself to be?",
+    opts: ["Definitely a morning type","More a morning type than an evening type","More an evening type than a morning type","Definitely an evening type"],
+    scores: [6, 4, 2, 0]
+  },
+];
+
+// ── QUIZ RENDERING ────────────────────────────────────────────────────────────
+
+function buildQuizCard(containerId, questions, optsOrFn, prefix, scoresFn) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  questions.forEach((qData, i) => {
+    const qText = typeof qData === 'string' ? qData : qData.q;
+    const opts  = typeof optsOrFn === 'function' ? optsOrFn(qData) : optsOrFn;
+    const scores = (qData.scores) ? qData.scores : opts.map((_,j)=>j);
+    const card = document.createElement('div');
+    card.className = 'quiz-q-card';
+    card.innerHTML = `
+      <div class="quiz-q-num">Q${i+1}</div>
+      <div class="quiz-q-text">${qText}</div>
+      <div class="quiz-opts" style="margin-top:12px;gap:8px;flex-wrap:wrap;">
+        ${opts.map((o, j) => `
+          <label class="quiz-opt">
+            <input type="radio" name="${prefix}_q${i}" value="${scores[j]}" onchange="updateQuizScore('${prefix}')">
+            <span class="quiz-opt-label">
+              <span class="quiz-opt-val">${scores[j]}</span>${o}
+            </span>
+          </label>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function updateQuizScore(prefix) {
+  let total = 0;
+  const container = document.getElementById(prefix + 'Questions');
+  if (!container) return;
+  container.querySelectorAll('input[type="radio"]:checked').forEach(el => {
+    total += parseFloat(el.value);
+  });
+  // For MEQ the minimum is 16 (from the scoring), so display raw sum
+  const display = document.getElementById(prefix + 'ScoreDisplay');
+  if (display) display.textContent = total;
+
+  // Also sync the hidden range slider so getScores() picks it up
+  const rangeMap = { isi:'isiRange', phq:'phqRange', gad:'gadRange', meq:'meqRange' };
+  const badgeMap = { isi:'isiBadge', phq:'phqBadge', gad:'gadBadge', meq:'meqBadge' };
+  const range = document.getElementById(rangeMap[prefix]);
+  if (range) {
+    range.value = total;
+    updateBadge(badgeMap[prefix], total, prefix);
+  }
+}
+
+function finaliseQuizScores() {
+  // Compute and sync all four scores
+  ['isi','phq','gad','meq'].forEach(prefix => updateQuizScore(prefix));
+  // Switch back to manual view so user sees their computed scores
+  switchScoreMode('manual');
+  // Flash the score badges to draw attention
+  ['isiBadge','phqBadge','gadBadge','meqBadge'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.transition = 'background 0.3s';
+      el.style.background = 'rgba(26,122,74,0.25)';
+      setTimeout(() => { el.style.background = ''; }, 1200);
+    }
+  });
+}
+
+function initQuizPanels() {
+  // ISI — 5-option scale 0–4
+  buildQuizCard('isiQuestions', ISI_QUESTIONS, q => q.opts, 'isi');
+
+  // PHQ-9 — 4-option scale 0–3
+  buildQuizCard('phqQuestions', PHQ9_QUESTIONS, PHQ9_OPTS, 'phq');
+
+  // GAD-7 — 4-option scale 0–3
+  buildQuizCard('gadQuestions', GAD7_QUESTIONS, GAD7_OPTS, 'gad');
+
+  // MEQ — variable scoring per question
+  buildQuizCard('meqQuestions', MEQ_QUESTIONS, q => q.opts, 'meq');
+}
+
 // ── Score mode / quiz UI ─────────────────────────────────────────────────────
 function switchScoreMode(mode) {
   const isManual = mode==='manual';
@@ -2325,6 +2540,9 @@ async function runAndGoToResults() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function initPage() {
+  // Render quiz question panels
+  initQuizPanels();
+
   // Init badges immediately (no DB needed)
   ['isi','phq','gad','meq'].forEach(k => {
     const el = document.getElementById(k+'Range');
